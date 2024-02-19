@@ -4,14 +4,15 @@ import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from constants.const import INDEED_ALLOW_TAG, INDEED_NEXT_BTN_TAG, INDEED_PAGE_COUNT_TAG, INDEED_SALARIES_TAG, INDEED_TILES_TAG, INDEED_URL, JOBS_ALLOW_TAG, JOBS_NEXT_SUBLINK, JOBS_PAGE_COUNT_TAG, JOBS_SALARIES_TAG, JOBS_URL, JOBS_TILES_TAG
 
 
-def preSetting():
 
+def preSetting(accept_cookies_tag):
     try:
         # Find and click the "Accept All" button
         accept_all_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, '//div[@id="ccmgt_explicit_accept" and @class="privacy-prompt-button primary-button ccmgt_accept_button"]'))
+            EC.element_to_be_clickable((By.XPATH, accept_cookies_tag ))
         )
         accept_all_button.click()
 
@@ -19,11 +20,11 @@ def preSetting():
         print(f"Exception while clicking 'Accept All' button: {e}")
         return None  # or any other value to indicate failure
 
-def getPageCount():
+def getPageCount(page_count_tag):
     try:
         # Find the specified <a> element
         target_link = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//a[@class="res-9hatlb" and @data-genesis-element="BUTTON"]'))
+            EC.presence_of_element_located((By.XPATH,page_count_tag ))
         )
         aria_label_value = target_link.get_attribute("aria-label")
         parts = aria_label_value.split(" of ")
@@ -34,44 +35,66 @@ def getPageCount():
         print(f"Exception while locating target link: {e}")
         return None  
 
-def navigateToNextPage(i,max_value) :
+def navigateToNextPage(i,max_value, next_sublink) :
         next_page = f"{i} of {max_value}"
-        next_link = f'//a[@class="res-14ttpod" and @data-genesis-element="BUTTON" and @aria-label="{next_page}"]'
+        next_link = next_sublink + f'"{next_page}"]'
 
-        target_link = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH,next_link ))
-        )
-
+        target_link = WebDriverWait(driver, 10).until( EC.presence_of_element_located((By.XPATH, next_link ) ))
         target_link.click()
 
-# Specify the URL of the website you want to scrape
-url = "https://www.jobs.ie/jobs/nurse/in-ireland?radius=20&searchOrigin=Resultlist_top-search"
+def parseDataByPageCount(job_titles_tag, job_salaries_tag ):
+    max_value = getPageCount(JOBS_PAGE_COUNT_TAG)
 
-# Create a new instance of the Chrome driver
+    for i in range(1,max_value+1):
+        try:
+            if i != 1 : 
+                navigateToNextPage(i,max_value, JOBS_NEXT_SUBLINK)
+
+            job_titles = driver.find_elements(By.XPATH, job_titles_tag )
+            job_salaries = driver.find_elements(By.XPATH,job_salaries_tag )
+
+            for i in range(0,len(job_salaries)):
+                print(f"{job_titles[i].text} {job_salaries[i].text}")
+
+            time.sleep(2)  
+
+        except Exception as e:
+            print(f"Exception: {e}")
+            break
+
+
+
+def parseDataByNextBtn (job_titles_tag, job_salaries_tag, next_btn_tag ):
+
+    while True:
+        try:
+            
+            next_btn = driver.find_elements(By.XPATH, next_btn_tag )
+            job_titles = driver.find_elements(By.XPATH, job_titles_tag )
+            job_salaries = driver.find_elements(By.XPATH,job_salaries_tag )
+
+            for i in range(0,len(job_salaries)):
+                print(f"{job_titles[i].text} {job_salaries[i].text}")
+
+            if not next_btn: 
+                break
+
+            time.sleep(2)  
+        
+
+        except Exception as e:
+            print(f"Exception: {e}")
+            break
+
 driver = webdriver.Chrome()
 
-driver.get(url)
+driver.get(INDEED_URL)
 
-preSetting()
-max_value = getPageCount()
-
-for i in range(1,max_value+1):
-    try:
-        if i != 1 : 
-            navigateToNextPage(i,max_value)
-
-        job_titles = driver.find_elements(By.XPATH, '//div[@class="res-nehv70" and @data-genesis-element="BASE"]')
-        job_salaries = driver.find_elements(By.XPATH, '//span[@class="res-1vpeoiv" and @data-at="job-item-salary-info"]')
-        print(f"{len(job_titles)} {len(job_salaries)}")
-
-        for i in range(0,len(job_titles)):
-            print(f"{job_titles[i].text} {job_salaries[i].text}")
-
-        time.sleep(2)  
-
-    except Exception as e:
-        print(f"Exception: {e}")
-        break
+preSetting(INDEED_ALLOW_TAG)
+if len(INDEED_PAGE_COUNT_TAG) != 0 : 
+    parseDataByPageCount(INDEED_TILES_TAG, INDEED_SALARIES_TAG)
+else :
+    parseDataByNextBtn(INDEED_TILES_TAG, INDEED_SALARIES_TAG,INDEED_NEXT_BTN_TAG)
 
 
 # Close the browser
