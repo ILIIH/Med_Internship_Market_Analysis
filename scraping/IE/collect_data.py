@@ -67,6 +67,7 @@ def parseDataByNextBtn (job_titles_tag, job_salaries_tag, next_btn_tag, pop_dial
 
     while True:
         try : 
+            driver.implicitly_wait(3) 
             close_dialog = driver.find_elements(By.XPATH, pop_dialog_close )
             close_dialog[0].click()
         except Exception as e:
@@ -78,7 +79,7 @@ def parseDataByNextBtn (job_titles_tag, job_salaries_tag, next_btn_tag, pop_dial
             job_titles = driver.find_elements(By.XPATH, job_titles_tag )
             job_salaries = driver.find_elements(By.XPATH,job_salaries_tag )
 
-            for i in range(0,len(job_titles)):
+            for i in range(0,len(job_salaries)):
                 print(f"{job_titles[i].text} {job_salaries[i].text}")
 
             if not next_btn: 

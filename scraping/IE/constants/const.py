@@ -2,14 +2,14 @@ from models.Job import Job
 
 job_websites = [
     Job(
-        url="https://ie.indeed.com/jobs?q=Nurse&l=Ireland",
+        url="https://ie.indeed.com/jobs?q=Nurse+€1%2C000&l=Ireland",
         cookies_allow_tag='//button[@id="onetrust-accept-btn-handler"]',
         title_tag='//span[starts-with(@id, "jobTitle")]',
         salary_tag='//div[contains(@class, "salary-snippet-container")]',
         next_page_btn_tag='//a[@data-testid="pagination-page-next"]',
         page_count_tag='',
         next_page_sublink_tag='',
-        pop_dialog_close_btn_tag='//button[@aria-label="close" and @type="button"]'
+        pop_dialog_close_btn_tag='//button[@aria-label="close"]'
     ),
     Job(
         url="https://www.jobs.ie/jobs/nurse/in-ireland?radius=20&searchOrigin=Resultlist_top-search",
